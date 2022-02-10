@@ -37,20 +37,20 @@ struct Varyings
     float3  bitangentWS     : TEXCOORD3; 
 };
 
-struct VertexTess{
+struct HSInput{
     float3 positionOS : INTERNALTESSPOS;
     float3 normalOS : NORMAL;
     float4 tangentOS : TANGENT;
     float2 texcoord : TEXCOORD0;
 };
 
-struct PatchTess {  
+struct HSPCOutput {  
     float edgeFactor[3] : SV_TESSFACTOR;
     float insideFactor  : SV_INSIDETESSFACTOR;
 };
 
-VertexTess DisplacementMappingVert(Attributes input){ 
-    VertexTess o;
+HSInput DisplacementMappingVert(Attributes input){ 
+    HSInput o;
     o.positionOS = input.positionOS;
     o.normalOS   = input.normalOS;
     o.tangentOS  = input.tangentOS;
@@ -59,9 +59,9 @@ VertexTess DisplacementMappingVert(Attributes input){
 }
    
    
-PatchTess PatchConstant (InputPatch<VertexTess,3> patch, uint patchID : SV_PrimitiveID){
-    //定义曲面细分的参数
-    PatchTess o;
+HSPCOutput PatchConstant (InputPatch<HSInput,3> patch, uint patchID : SV_PrimitiveID){
+ 
+    HSPCOutput o;
     o.edgeFactor[0] = _TessellationFactor;
     o.edgeFactor[1] = _TessellationFactor;
     o.edgeFactor[2] = _TessellationFactor;
@@ -69,21 +69,19 @@ PatchTess PatchConstant (InputPatch<VertexTess,3> patch, uint patchID : SV_Primi
     return o;
 }
 
-[domain("tri")]                         //确定图元，quad,triangle等
-[partitioning("fractional_odd")]        //拆分edge的规则，equal_spacing,fractional_odd,fractional_even
+[domain("tri")]                         // quad,triangle等
+[partitioning("fractional_odd")]        // equal_spacing,fractional_odd,fractional_even
 [outputtopology("triangle_cw")]         //输出的三角面正面的环绕方式,triangle_cw:顶点顺时针排列代表正面,triangle_ccw:顶点逆时针排列代表正面,line:只针对line的细分
 [patchconstantfunc("PatchConstant")]    //一个patch一共有三个点，但是这三个点都共用这个函数
 [outputcontrolpoints(3)]                //不同的图元会对应不同的控制点
 [maxtessfactor(64.0f)]                  //最大的细分因子   
-VertexTess DisplacementMappingHull (InputPatch<VertexTess,3> patch,uint id : SV_OutputControlPointID){
-    //定义hullshaderV函数
+HSInput DisplacementMappingControlPoint (InputPatch<HSInput,3> patch,uint id : SV_OutputControlPointID){
     return patch[id];
 }
  
  
-[domain("tri")]//同样需要定义图元 
-Varyings DisplacementMappingDomain (PatchTess tessFactors, const OutputPatch<VertexTess,3> patch, float3 bary : SV_DOMAINLOCATION)
-//bary:重心坐标
+[domain("tri")] 
+Varyings DisplacementMappingDomain (HSPCOutput tessFactors, const OutputPatch<HSInput,3> patch, float3 bary : SV_DOMAINLOCATION)
 {
     Attributes input;
     input.positionOS = patch[0].positionOS * bary.x + patch[1].positionOS * bary.y + patch[2].positionOS * bary.z;

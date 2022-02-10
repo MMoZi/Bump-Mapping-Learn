@@ -2,9 +2,9 @@ Shader "Bump/ParallaxMapping"
 {
     Properties
     {
-        _BaseColor ("Base Color", 2D) = "white" {}
-        _Normal ("Normal", 2D) = "bump" {}
-        _Height ("Height", 2D) = "height"{}
+        [NoScaleOffset]_BaseColor ("Base Color", 2D) = "white" {}
+        [NoScaleOffset]_Normal ("Normal", 2D) = "bump" {}
+        [NoScaleOffset]_Height ("Height", 2D) = "height"{}
 
         _NormalScale ("NormalScale", Range(0.0 ,10.0)) = 1.0
         _HeightScale ("HeightScale", Range(0.0, 0.1)) = 0.005
